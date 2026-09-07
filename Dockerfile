@@ -1,33 +1,43 @@
 # ── Dockerfile — 3DGS MCP Server ──────────────────────────────────────────────
-# The MCP server uses stdio transport — Claude Desktop starts it as a subprocess
-# and communicates via stdin/stdout.  To run it containerised, Claude Desktop's
-# config points to a wrapper script (see trainer-daemon/install.sh) that does:
+# Multi-stage build: compile TypeScript once at image build time, then ship a
+# production-only runtime layer that runs as an unprivileged user.
+#
+# The server speaks MCP over stdio, so the container must be started with -i
+# (stdin kept open). `run-container.sh` does this for Claude Desktop:
 #
 #   podman run --rm -i \
-#     -v ~/Documents/.../projects:/app/data/projects \
+#     -v "$PROJECTS_ROOT:/app/data/projects:z" \
 #     -e PROJECTS_ROOT=/app/data/projects \
 #     -e STUDIO_URL=http://host.containers.internal:3000/3dgs-studio \
-#     -e STUDIO_SERVICE_KEY=<key> \
+#     -e STUDIO_SERVICE_KEY=... \
 #     -e CONTAINER_MODE=1 \
-#     3dgs-mcp
-#
-# The -i flag pipes stdin/stdout through to the container, satisfying the MCP
-# stdio protocol.
+#     3dgs-mcp:latest
 
+# ── Stage 1: build ────────────────────────────────────────────────────────────
+FROM node:22-alpine AS build
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.json ./
+RUN npm ci --ignore-scripts
+
+COPY src ./src
+RUN npm run build
+
+# ── Stage 2: runtime ──────────────────────────────────────────────────────────
 FROM node:22-alpine
 WORKDIR /app
+ENV NODE_ENV=production
 
 RUN addgroup -g 1001 -S nodejs \
  && adduser  -u 1001 -S mcpuser -G nodejs
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
-COPY --chown=mcpuser:nodejs . .
+COPY --from=build --chown=mcpuser:nodejs /app/dist ./dist
 
 USER mcpuser
 
-# PROJECTS_ROOT and STUDIO_URL injected at runtime by the wrapper script.
-# Build TypeScript at container startup then launch the server — equivalent
-# to running `npm run build && node dist/index.js` on the host.
-CMD ["sh", "-c", "npm run build && node dist/index.js"]
+# PROJECTS_ROOT, STUDIO_URL, STUDIO_SERVICE_KEY and CONTAINER_MODE are injected
+# at runtime by the wrapper script (see run-container.sh and README.md).
+ENTRYPOINT ["node", "dist/index.js"]
