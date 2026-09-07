@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,6 +13,15 @@ const config: Config = {
   containerMode: true,
   requestTimeoutMs: 1000,
 };
+
+describe('server identity', () => {
+  it('reports the same version as package.json', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+      version: string;
+    };
+    expect(SERVER_VERSION).toBe(pkg.version);
+  });
+});
 
 describe('createServer (in-memory MCP round trip)', () => {
   let client: Client;

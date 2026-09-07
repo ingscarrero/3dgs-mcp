@@ -1,6 +1,6 @@
 {
   "name": "3dgs-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server (stdio) that lets Claude Desktop manage 3D Gaussian Splatting projects and training runs through a documented studio HTTP API",
   "type": "module",
   "main": "dist/index.js",

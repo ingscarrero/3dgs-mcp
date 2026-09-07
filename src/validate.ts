@@ -17,8 +17,11 @@ export class ValidationError extends Error {
 /** Identifiers are single path segments: letters, digits, `.`, `_`, `-`. */
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
-/** Control characters (C0 + DEL) are never allowed in free-text fields. */
+/** Control characters (C0 + DEL) are never allowed in single-line text fields. */
 const CONTROL_CHARS = /[\x00-\x1f\x7f]/;
+
+/** Multi-line text may contain tab, LF and CR but no other control characters. */
+const CONTROL_CHARS_EXCEPT_WHITESPACE = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/;
 
 export const TRAINING_METHODS = [
   'splatfacto',
@@ -82,6 +85,11 @@ export function validateDescription(value: unknown): string | undefined {
   if (typeof value !== 'string') throw new ValidationError('description must be a string.');
   if (value.length > MAX_DESCRIPTION_LENGTH) {
     throw new ValidationError(`description must be at most ${MAX_DESCRIPTION_LENGTH} characters.`);
+  }
+  if (CONTROL_CHARS_EXCEPT_WHITESPACE.test(value)) {
+    throw new ValidationError(
+      'description must not contain control characters (tabs and newlines are allowed).',
+    );
   }
   return value;
 }

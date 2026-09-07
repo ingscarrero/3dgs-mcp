@@ -52,7 +52,7 @@ Request body (all validated by the MCP server before sending):
 ```jsonc
 {
   "name": "Living room",              // required, 1–200 chars, no control chars
-  "description": "Wide-angle shots",  // optional, ≤ 2000 chars
+  "description": "Wide-angle shots",  // optional, ≤ 2000 chars; tabs/newlines ok, no other control chars
   "tags": ["interior", "test"],        // optional, ≤ 50 entries, each ≤ 64 chars
   "trainingConfig": {                  // optional; merged over studio defaults
     "method": "splatfacto",            // see §4 for accepted methods

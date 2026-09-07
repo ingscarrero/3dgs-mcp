@@ -33,7 +33,7 @@ Cross-cutting:
 | ID | Requirement | Implementation |
 |----|-------------|----------------|
 | NFR-S1 | **No shell execution.** External processes are started with `spawn(cmd, argv)` and never with a shell string. | `defaultBrowserOpener` in `src/tools.ts`; asserted in `tests/tools.test.ts`. |
-| NFR-S2 | **Input validation on every argument** that reaches the filesystem, HTTP layer, or a process: ids are single safe path segments; names/tags/descriptions are bounded and free of control characters; enums are whitelisted; numbers are bounded integers; `path` is a relative route with no scheme, `//`, `..`, quotes, whitespace, or shell metacharacters. | `src/validate.ts`; ~60 rejection cases in `tests/validate.test.ts`. |
+| NFR-S2 | **Input validation on every argument** that reaches the filesystem, HTTP layer, or a process: ids are single safe path segments; names/tags are bounded single-line text; descriptions are bounded multi-line text (tab/LF/CR only) — no other control characters; enums are whitelisted; numbers are bounded integers; `path` is a relative route with no scheme, `//`, `..`, quotes, whitespace, or shell metacharacters. | `src/validate.ts`; ~60 rejection cases in `tests/validate.test.ts`. |
 | NFR-S3 | **Origin pinning.** `open_studio` builds the URL with `new URL()` and refuses any result whose origin differs from `STUDIO_URL`. | `buildStudioUrl`. |
 | NFR-S4 | **Service-key scope.** The key is owner-level for the studio API; it is sent only as `x-service-key`, never in URLs or logs, and the server logs only whether it is set. | `src/studio.ts`, `src/index.ts`. |
 | NFR-S5 | **Rotation.** Rotating the key requires no code change: update the studio's secret and the value passed to the server, restart both. | `docs/RUNBOOK.md`. |
