@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+dist
+coverage
+tests
+docs
+*.md
+!README.md
+vitest.config.ts
+tsconfig.test.json

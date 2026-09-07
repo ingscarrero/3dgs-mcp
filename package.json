@@ -1,11 +1,15 @@
 {
   "name": "3dgs-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the 3DGS Studio pipeline — exposes tools for Claude to manage projects and training",
+  "description": "MCP server (stdio) that lets Claude Desktop manage 3D Gaussian Splatting projects and training runs through a documented studio HTTP API",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "dev": "node --watch dist/index.js",
     "start": "node dist/index.js",
     "prepare": "npm run build"
@@ -15,6 +19,37 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "typescript": "^5"
+    "@vitest/coverage-v8": "^3.2.7",
+    "typescript": "^5",
+    "vitest": "^3.2.7"
+  },
+  "license": "MIT",
+  "author": "Sergio Carrero",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ingscarrero/3dgs-mcp.git"
+  },
+  "homepage": "https://github.com/ingscarrero/3dgs-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/ingscarrero/3dgs-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "gaussian-splatting",
+    "3dgs",
+    "nerfstudio"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "3dgs-mcp": "dist/index.js"
   }
 }
