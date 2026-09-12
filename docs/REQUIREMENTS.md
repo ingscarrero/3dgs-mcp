@@ -11,7 +11,7 @@ All tools are exposed via MCP `tools/list` and dispatched by `tools/call`
 | ID | Tool | Requirement | Inputs | Output | Side effects |
 |----|------|-------------|--------|--------|--------------|
 | FR-1 | `list_projects` | Return a summary of every project under `PROJECTS_ROOT` that has a readable `meta.json`, sorted by id. | — | `{ projects: ProjectSummary[], count }` | None (read-only). |
-| FR-2 | `get_project` | Return the full `meta.json` and the latest `run.json` (or `null`) for one project. Unknown id → `isError`. | `projectId` | `{ project, latestRun }` | None. |
+| FR-2 | `get_project` | Return `meta.json` filtered to the `ProjectSummary` fields (same allowlist as FR-1) and the latest `run.json` (or `null`) for one project. Unknown id → `isError`. | `projectId` | `{ project, latestRun }` | None. |
 | FR-3 | `create_project` | Create a project through the studio, sending `trainingConfig.{method,maxSteps}` (not top-level fields) so the studio honours them. | `name`, `description?`, `method?`, `maxSteps?`, `tags?` | Studio reply `{ project }` | `POST /api/projects`; studio creates `<id>/` on disk. |
 | FR-4 | `start_training` | Ask the studio to start a run and return its `runId`. | `projectId`, `method?`, `maxSteps?`, `skipProcessing?` | Studio reply `{ runId, run }` | `POST /api/training/start`; GPU work begins. |
 | FR-5 | `stop_training` | Cancel a run by id. | `runId` | `{ ok: true }` | `DELETE /api/training/start`; process killed, `run.json` marked `cancelled`. |

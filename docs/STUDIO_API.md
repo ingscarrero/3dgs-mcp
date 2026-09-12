@@ -186,10 +186,11 @@ interface Project {
 }
 ```
 
-`list_projects` returns only the fields it understands (`id`, `name`,
-`description`, `status`, `imageCount`, `sourceType`, `tags`,
-`trainingConfig`, `outputSplat`, `gaussianCount`, `createdAt`, `updatedAt`);
-`get_project` returns the whole object verbatim.
+Both `list_projects` and `get_project` return only the fields the MCP server
+understands (`id`, `name`, `description`, `status`, `imageCount`,
+`sourceType`, `tags`, `trainingConfig`, `outputSplat`, `gaussianCount`,
+`createdAt`, `updatedAt`). Anything else in `meta.json` — viewer state,
+paths, or fields a future studio adds — is never forwarded to the model.
 
 ### 3.2 `TrainingRun` (run.json)
 

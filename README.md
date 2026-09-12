@@ -119,10 +119,12 @@ Precedence in the wrapper: **process env → dotenv file → defaults**.
 
 - **No shell.** The only process this server ever starts is the OS URL
   opener, via `spawn(cmd, [url])`. The `path` argument of `open_studio` is
-  whitelisted (relative route only — no scheme, `//`, `..`, quotes,
-  whitespace, or metacharacters) and the URL is rebuilt with `new URL()` and
-  pinned to the studio origin. Version 0.1.0 interpolated `path` into a
-  shell string; that is fixed in 0.2.0.
+  whitelisted (relative route only — no scheme, `//`, `.`/`..` segments,
+  `%` (so encoded dot segments such as `%2e%2e` cannot slip past), quotes,
+  whitespace, or metacharacters); the URL is rebuilt with `new URL()`,
+  pinned to the studio origin, and rejected if the resolved path leaves the
+  studio base path. Version 0.1.0 interpolated `path` into a shell string;
+  that is fixed in 0.2.0.
 - **Validated inputs.** Project/run ids are single safe path segments, so
   filesystem reads cannot escape `PROJECTS_ROOT`; names, tags, enums and
   numbers are bounded.
