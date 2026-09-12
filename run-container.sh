@@ -55,11 +55,14 @@ fi
 
 # Inside the container "localhost" is the container itself; rewrite it to the
 # runtime's host gateway so the server can reach a studio running on the host.
+# The projects directory is mounted read-only: the server only ever reads
+# meta.json / run.json / output/**. ":z" asks Podman for an SELinux relabel
+# (harmless on macOS / non-SELinux hosts); Docker needs plain ":ro".
 case "$CONTAINER_RUNTIME" in
-  podman) HOST_GATEWAY="host.containers.internal"; EXTRA_ARGS=() ;;
-  docker) HOST_GATEWAY="host.docker.internal"
+  podman) HOST_GATEWAY="host.containers.internal"; EXTRA_ARGS=(); MOUNT_OPTS="z,ro" ;;
+  docker) HOST_GATEWAY="host.docker.internal"; MOUNT_OPTS="ro"
           EXTRA_ARGS=(--add-host "host.docker.internal:host-gateway") ;;
-  *)      HOST_GATEWAY="host.containers.internal"; EXTRA_ARGS=() ;;
+  *)      HOST_GATEWAY="host.containers.internal"; EXTRA_ARGS=(); MOUNT_OPTS="ro" ;;
 esac
 CONTAINER_STUDIO_URL=$(printf '%s' "$STUDIO_URL" | sed -E "s#//(localhost|127\.0\.0\.1)([:/]|\$)#//${HOST_GATEWAY}\2#")
 
@@ -79,13 +82,16 @@ log "starting $IMAGE via $CONTAINER_RUNTIME (studio=$CONTAINER_STUDIO_URL, proje
 
 # --rm : remove container on exit
 # -i   : keep stdin open (required for MCP stdio transport)
-# :z   : SELinux relabel (harmless on macOS / non-SELinux hosts)
+# The service key is passed through from this process's environment with the
+# bare "--env NAME" form, so its value never appears on the container
+# runtime's argv (visible to every local user via `ps`).
+export STUDIO_SERVICE_KEY
 exec "$CONTAINER_RUNTIME" run --rm -i \
   --name "3dgs-mcp-$$" \
   "${EXTRA_ARGS[@]}" \
-  -v "${PROJECTS_ROOT}:/app/data/projects:z" \
+  -v "${PROJECTS_ROOT}:/app/data/projects:${MOUNT_OPTS}" \
   -e "PROJECTS_ROOT=/app/data/projects" \
   -e "STUDIO_URL=${CONTAINER_STUDIO_URL}" \
-  -e "STUDIO_SERVICE_KEY=${STUDIO_SERVICE_KEY}" \
+  --env STUDIO_SERVICE_KEY \
   -e "CONTAINER_MODE=1" \
   "$IMAGE"
