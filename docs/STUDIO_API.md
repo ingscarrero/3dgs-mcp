@@ -150,8 +150,10 @@ sub-directory per project, named by the project id:
   readable `meta.json` are skipped by `list_projects` / `list_splats`.
 - **`readRun(id)`** — same rules for `run.json`. Absence means "no run yet".
 - **`listSplatFiles(id)`** — recursive listing of `output/` filtered to
-  `*.splat`. `.ply` outputs are deliberately not listed (the studio converts
-  them on demand).
+  `*.splat`, returned as paths relative to `PROJECTS_ROOT`
+  (`<projectId>/output/...`) so absolute host paths never reach the model.
+  `.ply` outputs are deliberately not listed (the studio converts them on
+  demand).
 
 The reference studio writes these files atomically (write-then-rename) so a
 poll never observes a half-written JSON document; if yours does not, the MCP
@@ -184,10 +186,11 @@ interface Project {
 }
 ```
 
-`list_projects` returns only the fields it understands (`id`, `name`,
-`description`, `status`, `imageCount`, `sourceType`, `tags`,
-`trainingConfig`, `outputSplat`, `gaussianCount`, `createdAt`, `updatedAt`);
-`get_project` returns the whole object verbatim.
+Both `list_projects` and `get_project` return only the fields the MCP server
+understands (`id`, `name`, `description`, `status`, `imageCount`,
+`sourceType`, `tags`, `trainingConfig`, `outputSplat`, `gaussianCount`,
+`createdAt`, `updatedAt`). Anything else in `meta.json` — viewer state,
+paths, or fields a future studio adds — is never forwarded to the model.
 
 ### 3.2 `TrainingRun` (run.json)
 

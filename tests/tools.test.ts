@@ -148,6 +148,27 @@ describe('get_project', () => {
     });
   });
 
+  it('applies the same field allowlist as list_projects to meta.json', async () => {
+    installFakeFs(
+      projectTree(ROOT, [
+        {
+          id: PROJECT_ID,
+          meta: {
+            id: PROJECT_ID,
+            name: 'Room',
+            ownerEmail: 'owner@example.test',
+            sourcePath: '/Users/someone/scenes/room',
+            internal: { token: 'x' },
+          },
+        },
+      ]),
+    );
+    expect(parse(await call('get_project', { projectId: PROJECT_ID }))).toEqual({
+      project: { id: PROJECT_ID, name: 'Room' },
+      latestRun: null,
+    });
+  });
+
   it('reports a missing project as an error', async () => {
     installFakeFs(projectTree(ROOT, []));
     const result = await call('get_project', { projectId: 'nope' });
@@ -386,8 +407,14 @@ describe('list_splats', () => {
     );
     expect(parse(await call('list_splats'))).toEqual({
       count: 1,
-      splats: [{ projectId: 'a', name: 'A', splats: [`${ROOT}/a/output/msplat/scene.splat`] }],
+      splats: [{ projectId: 'a', name: 'A', splats: ['a/output/msplat/scene.splat'] }],
     });
+  });
+
+  it('never discloses the absolute projects root', async () => {
+    installFakeFs(projectTree(ROOT, [{ id: 'a', meta: { name: 'A' }, outputs: ['x.splat'] }]));
+    const result = await call('list_splats');
+    expect(result.content[0].text).not.toContain(ROOT);
   });
 });
 
@@ -417,6 +444,8 @@ describe('open_studio', () => {
     'http://evil.example',
     '//evil.example',
     '/../admin',
+    '/%2e%2e/%2e%2e/admin',
+    '/%2E%2E/admin',
     '/a b',
   ])('rejects injection attempt %j without launching anything', async (p) => {
     const result = await call('open_studio', { path: p });

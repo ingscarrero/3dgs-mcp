@@ -165,6 +165,18 @@ describe('validateStudioPath', () => {
     ['/../secret', 'parent traversal'],
     ['/a/../b', 'embedded traversal'],
     ['/a/./b', 'dot segment'],
+    ['/..', 'bare parent segment'],
+    ['/a/..', 'trailing parent segment'],
+    ['/a/..?x=1', 'parent segment before query'],
+    ['/a/..#top', 'parent segment before fragment'],
+    ['/%2e%2e/admin', 'percent-encoded parent traversal (lowercase)'],
+    ['/%2E%2E/admin', 'percent-encoded parent traversal (uppercase)'],
+    ['/%2e%2e/%2e%2e/admin', 'repeated percent-encoded traversal'],
+    ['/.%2e/admin', 'mixed literal/encoded parent segment'],
+    ['/%2e./admin', 'mixed encoded/literal parent segment'],
+    ['/%2e/admin', 'percent-encoded dot segment'],
+    ['/a%2fb', 'percent-encoded slash'],
+    ['/?q=a%20b', 'percent-encoding in the query string'],
     ['/x" && rm -rf / && "', 'double-quote breakout'],
     ["/x' ; id ; '", 'single-quote breakout'],
     ['/x`id`', 'backticks'],
@@ -205,5 +217,29 @@ describe('buildStudioUrl', () => {
   it('never leaves the studio origin, even for a hostile route', () => {
     // validateStudioPath already blocks these; buildStudioUrl is the second line.
     expect(buildStudioUrl('http://localhost:3000', '/x')).toMatch(/^http:\/\/localhost:3000\//);
+  });
+
+  it.each([
+    '/../admin',
+    '/../../admin',
+    '/%2e%2e/admin',
+    '/%2E%2E/admin',
+    '/%2e%2e/%2e%2e/admin',
+    '/.%2e/admin',
+    '/%2e./admin',
+    '/a/../../admin',
+    '/..',
+  ])('refuses %j when it would escape the studio base path', (route) => {
+    expect(() => buildStudioUrl('http://localhost:3000/3dgs-studio', route)).toThrow(
+      /outside the studio base path|"\." or "\.\." segments/,
+    );
+  });
+
+  it('keeps routes that resolve inside the base path', () => {
+    expect(buildStudioUrl('http://localhost:3000/3dgs-studio', '/a/../b')).toBe(
+      'http://localhost:3000/3dgs-studio/b',
+    );
+    // With no base path there is nothing to escape; the origin check still holds.
+    expect(buildStudioUrl('http://localhost:3000', '/..')).toBe('http://localhost:3000/');
   });
 });

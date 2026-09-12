@@ -6,6 +6,23 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+- `open_studio` rejects any `%` in `path`, and `buildStudioUrl` re-checks the
+  resolved URL for dot segments and for staying under the studio base path, so
+  `%2e%2e` can no longer escape e.g. `/3dgs-studio` (origin was already pinned).
+- `list_splats` returns paths relative to `PROJECTS_ROOT` instead of absolute
+  host paths (no longer discloses the operator's home directory).
+- `get_project` applies the same `meta.json` field allowlist as `list_projects`.
+- `run-container.sh` mounts the projects directory read-only (`:ro` /
+  `:z,ro`), matching the documented contract, and passes
+  `STUDIO_SERVICE_KEY` through from the environment (`--env NAME`) instead of
+  putting its value on the container runtime's argv.
+- `Dockerfile` pins `node:22-alpine` to its multi-arch index digest; CI pins
+  every third-party action to a full commit SHA.
+- Production dependency audit: 0 vulnerabilities (was 6, all transitive via
+  `@modelcontextprotocol/sdk`: `hono`, `ip-address`, `fast-uri`, `qs`,
+  `body-parser`) after `npm audit fix`.
+
 ## [0.2.0] — 2026-09-07
 
 Public-readiness release. The server now stands alone against a documented

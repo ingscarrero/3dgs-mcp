@@ -146,6 +146,8 @@ export function validateTags(value: unknown): string[] {
  * Accepts only a relative route (`/`, `/?tab=chat`, `/projects/abc#x`):
  *  - must start with a single `/` (so `//evil.com` and `http://...` are rejected)
  *  - no `.`/`..` segments, backslashes, whitespace, quotes, or shell metacharacters
+ *  - no `%` at all: the WHATWG parser treats `%2e%2e` as `..`, so percent
+ *    encoding would let an encoded dot segment escape the studio base path
  *  - printable ASCII only (no control characters)
  */
 export function validateStudioPath(value: unknown): string {
@@ -162,6 +164,9 @@ export function validateStudioPath(value: unknown): string {
   if (/[\s\\"'`<>|;$]/.test(p) || !/^[!-~]+$/.test(p)) {
     throw new ValidationError('path contains characters that are not allowed.');
   }
+  if (p.includes('%')) {
+    throw new ValidationError('path must not contain percent-encoded characters.');
+  }
   const routePart = p.split(/[?#]/, 1)[0];
   if (routePart.split('/').some((segment) => segment === '..' || segment === '.')) {
     throw new ValidationError('path must not contain "." or ".." segments.');
@@ -169,9 +174,15 @@ export function validateStudioPath(value: unknown): string {
   return p;
 }
 
+/** A URL path segment that the WHATWG parser would treat as `.` or `..`. */
+const DOT_SEGMENT = /^(?:\.|%2e|\.\.|\.%2e|%2e\.|%2e%2e)$/i;
+
 /**
  * Join a validated route onto the studio base URL using the WHATWG URL
- * parser, and verify the result stays on the studio origin.
+ * parser, and verify the result stays on the studio origin *and* under the
+ * studio base path (e.g. `/3dgs-studio`). The parser collapses `..` and
+ * `%2e%2e` segments, so the effective guard is the base-path prefix check;
+ * the dot-segment re-check is defence in depth.
  */
 export function buildStudioUrl(studioUrl: string, route: string): string {
   let base: URL;
@@ -187,6 +198,12 @@ export function buildStudioUrl(studioUrl: string, route: string): string {
   const target = new URL(basePath + route, base.origin);
   if (target.origin !== base.origin) {
     throw new ValidationError('path resolved outside the studio origin.');
+  }
+  if (target.pathname.split('/').some((segment) => DOT_SEGMENT.test(segment))) {
+    throw new ValidationError('path must not contain "." or ".." segments.');
+  }
+  if (target.pathname !== basePath && !target.pathname.startsWith(`${basePath}/`)) {
+    throw new ValidationError('path resolved outside the studio base path.');
   }
   return target.toString();
 }
