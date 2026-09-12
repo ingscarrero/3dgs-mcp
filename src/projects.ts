@@ -52,7 +52,12 @@ export function listProjectIds(projectsRoot: string): string[] {
     .sort();
 }
 
-/** Absolute paths of every `.splat` file under `<root>/<id>/output`, sorted. */
+/**
+ * Every `.splat` file under `<root>/<id>/output`, sorted, as POSIX paths
+ * relative to `PROJECTS_ROOT` (`<id>/output/...`). Absolute host paths are
+ * deliberately not returned so the model never learns where the operator
+ * keeps the projects directory.
+ */
 export function listSplatFiles(projectsRoot: string, id: string): string[] {
   const outputDir = path.join(projectsRoot, id, 'output');
   if (!fs.existsSync(outputDir)) return [];
@@ -60,6 +65,6 @@ export function listSplatFiles(projectsRoot: string, id: string): string[] {
     .readdirSync(outputDir, { recursive: true })
     .map((entry) => String(entry))
     .filter((entry) => entry.endsWith('.splat'))
-    .map((entry) => path.join(outputDir, entry))
+    .map((entry) => path.posix.join(id, 'output', ...entry.split(path.sep)))
     .sort();
 }

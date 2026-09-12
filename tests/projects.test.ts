@@ -74,10 +74,7 @@ describe('projects (filesystem readers)', () => {
         { id: 'p1', meta: {}, outputs: ['msplat/scene.splat', 'msplat/scene.ply', 'b.splat'] },
       ]),
     );
-    expect(listSplatFiles(ROOT, 'p1')).toEqual([
-      `${ROOT}/p1/output/b.splat`,
-      `${ROOT}/p1/output/msplat/scene.splat`,
-    ]);
+    expect(listSplatFiles(ROOT, 'p1')).toEqual(['p1/output/b.splat', 'p1/output/msplat/scene.splat']);
     expect(fs.readdirSync).toHaveBeenCalledWith(`${ROOT}/p1/output`, { recursive: true });
   });
 

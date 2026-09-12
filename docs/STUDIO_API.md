@@ -150,8 +150,10 @@ sub-directory per project, named by the project id:
   readable `meta.json` are skipped by `list_projects` / `list_splats`.
 - **`readRun(id)`** — same rules for `run.json`. Absence means "no run yet".
 - **`listSplatFiles(id)`** — recursive listing of `output/` filtered to
-  `*.splat`. `.ply` outputs are deliberately not listed (the studio converts
-  them on demand).
+  `*.splat`, returned as paths relative to `PROJECTS_ROOT`
+  (`<projectId>/output/...`) so absolute host paths never reach the model.
+  `.ply` outputs are deliberately not listed (the studio converts them on
+  demand).
 
 The reference studio writes these files atomically (write-then-rename) so a
 poll never observes a half-written JSON document; if yours does not, the MCP

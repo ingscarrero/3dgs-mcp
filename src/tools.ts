@@ -51,7 +51,8 @@ export const TOOLS: Tool[] = [
   },
   {
     name: 'get_project',
-    description: 'Get full details for a specific project, including its latest training run.',
+    description:
+      'Get details for a specific project (same fields as list_projects) plus its latest training run.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -117,7 +118,8 @@ export const TOOLS: Tool[] = [
   },
   {
     name: 'list_splats',
-    description: 'List all completed .splat outputs across all projects.',
+    description:
+      'List all completed .splat outputs across all projects (paths relative to the projects root).',
     inputSchema: { type: 'object', properties: {}, required: [] },
   },
   {
@@ -235,7 +237,7 @@ async function dispatch(
       const project = readMeta(config.projectsRoot, projectId);
       if (!project) return errorResult(`Project ${projectId} not found.`);
       const run = readRun(config.projectsRoot, projectId);
-      return json({ project, latestRun: run });
+      return json({ project: summarizeProject(project), latestRun: run });
     }
 
     case 'create_project': {

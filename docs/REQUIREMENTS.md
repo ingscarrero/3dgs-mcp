@@ -16,7 +16,7 @@ All tools are exposed via MCP `tools/list` and dispatched by `tools/call`
 | FR-4 | `start_training` | Ask the studio to start a run and return its `runId`. | `projectId`, `method?`, `maxSteps?`, `skipProcessing?` | Studio reply `{ runId, run }` | `POST /api/training/start`; GPU work begins. |
 | FR-5 | `stop_training` | Cancel a run by id. | `runId` | `{ ok: true }` | `DELETE /api/training/start`; process killed, `run.json` marked `cancelled`. |
 | FR-6 | `get_training_status` | Report status, timestamps, last 20 log lines and last 10 metric rows from `run.json`; tolerate missing/odd fields. | `projectId` | `{ runId, status, startedAt, completedAt, targetSteps, recentLogs, recentMetrics, error }` | None. |
-| FR-7 | `list_splats` | List every `*.splat` under `<id>/output/**` for projects that have at least one. | — | `{ splats: [{ projectId, name, splats[] }], count }` | None. |
+| FR-7 | `list_splats` | List every `*.splat` under `<id>/output/**` (as paths relative to `PROJECTS_ROOT`) for projects that have at least one. | — | `{ splats: [{ projectId, name, splats[] }], count }` | None. |
 | FR-8 | `open_studio` | Open a **relative** studio route in the default browser, or return the URL when running in a container. | `path?` (default `/`) | Text confirmation with the URL | Spawns the OS opener (host mode only). |
 
 Cross-cutting:
